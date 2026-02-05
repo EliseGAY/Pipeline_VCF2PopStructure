@@ -7,10 +7,8 @@
   # - LD and pruning
   # - PCA
   # - Admixture
-  # - SFS : TODO
-  # - Diversity : TODO
-  # - Imbreeding : TODO
-# Aim : Run general analysis of population structure on a gVCF
+ 
+# Aim : Run general analysis to detect population structure on a gVCF
 #========================================================================================#
 #========================================================================================#
 
@@ -599,63 +597,3 @@ prop <- snpgdsAdmixProp(RV, groups=groups)
 
 # draw
 snpgdsAdmixPlot(prop, group=metadata$Population)
-
-#==============#
-#==============#
-# ---- SFS ----
-#==============#
-#==============#
-
-# INPUT 
-#-------#
-# VCF with required filters (generally : Na = 0%, Heterozygous rate max = 80%)
-
-# METHODS
-#------------------#
-# PEGAS function : site.spectrum. Create SFS on DNAbin sequences
-
-# OUTPUT
-#---------#
-# sfs table
-colnames(VCFR_data@gt)
-
-VCF_DP = filter_vcf_by_dp(vcf = VCFR_data, min_dp_pos = 10, max_dp_pos = 80, min_dp_ind = 10, max_dp_ind = 80)
-VCF_0Na = Filters_na_Ind_Pos(vcf = VCF_DP, rate_na_max_POS = 0.0, rate_na_max_Ind = 0.0, ploidy = 2)
-
-# read VCF :
-VCF=read.vcfR("data/WGS_21_SUPER_1_TAG_Flowqual_Noindels_Norepeat_SNP_DP10_50_10_200_Na0_het80_order.vcf")
-# Create DNA sequences
-DNAbin <-vcfR2DNAbin(VCFR_data,  extract.indels = TRUE,
-                     consensus = FALSE,
-                     extract.haps = F,
-                     unphased_as_NA = F,
-                     asterisk_as_del = FALSE,
-                     ref.seq = NULL,
-                     start.pos = NULL,
-                     verbose = TRUE)
-
-
-# TODO
-
-#==============================#
-#==============================#
-# ---- diversity indexes ----
-#==============================#
-#==============================#
-
-# INPUT 
-#-------#
-# VCF with required filters (generally : Na = 0%, Heterozygous rate max = 80%)
-
-# METHODS
-#------------------#
-# PEGAS function : site.spectrum. Create SFS on DNAbin sequences
-# calcola_normalized_foldedSFS : used to fold the SFS
-
-# OUTPUT
-#---------#
-# 4 diversity indexes : Theta = u/2N
-#   - Nb de sites ségregeants 
-#   - Mean pairwise difference 
-#   - S : 
-#   - tajima D
