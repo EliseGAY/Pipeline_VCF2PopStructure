@@ -16,11 +16,12 @@ library(stringr)
 library(vcfR)
 library(usethis)
 library(devtools)
+system("git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git")
 
 # Load functions to apply filters on genotype and depth
 #------------------------------------------------------#
 # for filters on sequencing depth 
-load_all("module_VCF2PopStructure/VCF2PopStructure/")
+load_all("Package_VCF2PopStructure/")
 
 #===============================#
 #===============================#
