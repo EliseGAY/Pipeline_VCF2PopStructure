@@ -428,8 +428,8 @@ for (i in 1:nb_axes) {
 #=====================#
 #=====================#
 # briefly : 
-# Test to fit how much your genotype structure fits to K ancestries (K proxi is given by the PCA you already made).
-# Cross entropy measures the -log(likelihood) to seeing your data given the Ki ancestry tested 
+# Test to fit how much your genotype structure fits to K ancestries (K proxi range is given by the PCA you already made).
+# Cross entropy measures the -log(likelihood) to seeing your data given the Ki ancestry tested.
 # The lower the cross-entropy the better the K
 
 #---- with Snmf ----
@@ -597,3 +597,4 @@ prop <- snpgdsAdmixProp(RV, groups=groups)
 
 # draw
 snpgdsAdmixPlot(prop, group=metadata$Population)
+
