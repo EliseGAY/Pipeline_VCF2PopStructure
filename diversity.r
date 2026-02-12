@@ -1,3 +1,26 @@
+library(LEA)
+library(vcfR)
+library(hierfstat)
+library(pegas)
+library(adegenet)
+library(SNPRelate)
+library(gdsfmt)
+library(rlist)
+library(ggplot2)
+library(withr)
+library(ggplot2)
+library(ggrepel)
+library(reshape2)
+library(gridExtra)
+library(pcadapt)
+library(dplyr)
+library(stringr)
+library(usethis)
+library(devtools)
+library(comprehend)
+system("git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git")
+load_all("../VCF2PopStructure/")
+
 #===============================#
 #===============================#
 # ------ PREPARE YOUR DATA ----
