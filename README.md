@@ -13,9 +13,9 @@ These script provides a global analysis of population structure using VCF data. 
 - **F-statistics (FST) computation** for population differentiation
 - **sNMF analysis** for ancestry inference
 - 
-###TODO `Div_indices.r : `
+  `Diversity.r : `
 - **Site Frequency Spectrum (SFS) computation**
-- **Diversity analysis (DIV)**
+- **Diversity indices (DIV)**
 
 
 ## Dependencies
@@ -41,6 +41,7 @@ library(dplyr)
 library(stringr)
 library(usethis)
 library(devtools)
+library(comprehend)
 system("git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git")
 load_all("../VCF2PopStructure/")```
 
