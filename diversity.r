@@ -1,3 +1,39 @@
+#===============================#
+#===============================#
+# ------ PREPARE YOUR DATA ----
+#===============================#
+#===============================#
+
+#--------------#
+# Metadata pop
+#--------------#
+
+# the pop table has to be ordered in the same way as all the VCF header
+#'''
+#	pop	samples
+#	pop1 sample_1
+#	pop1 sample_2
+#	pop1 sample_3
+#	pop2 sample_4
+#	pop2 sample_5
+#'''
+
+# read metada
+metadata=read.table("metadata/metadata.txt", header = TRUE)
+metadata=as.data.frame(metadata)
+pop=unique(metadata$Population)
+head(metadata)
+
+#-----------------------------------------------------------#
+# Generate Genotype tables needed in different R packages
+#-----------------------------------------------------------#
+
+# Read the VCF with vcfR :
+VCFR_data=read.vcfR("data/VCF_example.vcf.gz")
+
+# create a pop vector
+vec_pop <- metadata$Population[match(colnames(VCFR_data@gt)[-1], metadata$GT_sample)]
+
 #==============#
 #==============#
 # ---- SFS ----
