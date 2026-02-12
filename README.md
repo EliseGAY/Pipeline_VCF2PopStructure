@@ -13,7 +13,9 @@ These script provides a global analysis of population structure using VCF data. 
 - **F-statistics (FST) computation** for population differentiation
 - **sNMF analysis** for ancestry inference
 - 
-  `Diversity.r : `
+
+`Diversity.r : `
+
 - **Site Frequency Spectrum (SFS) computation**
 - **Diversity indices (DIV)**
 
