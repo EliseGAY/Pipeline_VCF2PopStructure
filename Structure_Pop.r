@@ -215,38 +215,63 @@ snpgdsClose(genofile_TC)
 #   π_between : mean nucleotide divergence between populations
 #-----------------------------------------------------------------#
 
+#-----------------------------------------------------------------#
+# Hudson et al. (1992) — diversity-based (π)
+#
+#   FST_Hudson = (π_between − π_within) / π_between
+#
+#   π_within  : mean nucleotide diversity within populations
+#   π_between : mean nucleotide divergence between populations
+#-----------------------------------------------------------------#
+#---- with Package VCR2PopStructure (home made)----
+# (git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git) and then load(Package_VCF2PopStructure/)
+
 # Get genotype table
 loci_table = extract.gt(VCFR_data, element = "GT")
 loci_table = as.data.frame(loci_table)
 colnames(loci_table)
 
-# tranform
+# tranform in genotype table with Convert_GT function
 loci_table_T_CV = Convert_GT(loci_table)
 
-# If you want allele freq
-getAlleleFreqByPop(loci_table = loci_table_T_CV, pop_table = metadata)
+# Unroll the package function :
 
-# test Fst computation on SNPs subset 
-rowrandom = order(round(runif(n = 10000, min = 1, max = 201634), 0))
-# Fst by SNPs
-Fst_BySnps = getFstBySNP(loci_table_T = as.data.frame(loci_table_T_CV[rowrandom,, drop = F]), 
-                       pop_table = metadata)
+#Get allele (alt and ref) frequencies over all samples :
+freq_list = getAlleleFreq(loci_table_T_CV)
+freq_list$alt_freq 
+freq_list$ref_freq
+#Get allele (alt and ref) count over all samples :
+freq_list = getAlleleCount(loci_table_T_CV)
+freq_list$alt_count
+freq_list$ref_count
+
+# Get allele freq and count by pop by giving the pop table :
+by_pop = getAlleleFreqByPop(loci_table = loci_table_T_CV, pop_table = metadata)
+summary(by_pop)
+
+by_popCount = getAlleleCountByPop(loci_table = loci_table_T_CV, pop_table = metadata)
+summary(by_popCount)
+
+#GetFst by SNP using the count 
+Fst_BySnps = getFstBySNP_Count(loci_table_T = loci_table_T_CV, 
+                              pop_table = metadata, Na_rate = 0, 
+                              MAF_threshold = 0.05)
+Fst_BySnps$Cucugnan_Cesseras
+
 # Fst Whole SNPs
-Fst_Global = getGlobalFst(loci_table_T = loci_table_T_CV[rowrandom, , drop = FALSE], 
-                          pop_table = metadata)
+Fst_GlobalCount = getGlobalFst_Count(loci_table_T = loci_table_T_CV, 
+                          pop_table = metadata, Na_rate = 1.0, MAF_threshold = 0.05)
 
-# Do it on whole SNPs set
-Fst_Global = getGlobalFst(loci_table_T = loci_table_T_CV, 
-                          pop_table = metadata)
-# results :
-# $Cucugnan_Termes
-# [1] 0.2813149
-# 
-# $Cucugnan_Cesseras
-# [1] 0.3746937
-# 
-# $Termes_Cesseras
-# [1] 0.3772484
+Fst_GlobalCount
+#> Fst_GlobalCount
+#$Cucugnan_Termes
+#[1] 0.2343076
+#
+#$Cucugnan_Cesseras
+#[1] 0.3869806
+#
+#$Termes_Cesseras
+#[1] 0.3902395
 
 # Permute the Fst to get significance :
 # TO DO
@@ -580,3 +605,4 @@ prop <- snpgdsAdmixProp(RV, groups=groups)
 
 # draw
 snpgdsAdmixPlot(prop, group=metadata$Population)
+
