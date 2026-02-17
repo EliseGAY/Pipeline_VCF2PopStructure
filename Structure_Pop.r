@@ -215,14 +215,6 @@ snpgdsClose(genofile_TC)
 #   π_between : mean nucleotide divergence between populations
 #-----------------------------------------------------------------#
 
-#-----------------------------------------------------------------#
-# Hudson et al. (1992) — diversity-based (π)
-#
-#   FST_Hudson = (π_between − π_within) / π_between
-#
-#   π_within  : mean nucleotide diversity within populations
-#   π_between : mean nucleotide divergence between populations
-#-----------------------------------------------------------------#
 #---- with Package VCR2PopStructure (home made)----
 # (git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git) and then load(Package_VCF2PopStructure/)
 
@@ -442,7 +434,7 @@ for (i in 1:nb_axes) {
 # The lower the cross-entropy the better the K
 
 #---- with Snmf ----
-# 
+ 
 # INPUT 
 #-------#
 # VCFs filtered for Na and DP on R (for NA and DP)
@@ -461,6 +453,7 @@ for (i in 1:nb_axes) {
 # METHODS
 #------------------#
 # snmf : "estimates admixture coefficients using sparse Non-Negative Matrix Factorization algorithms"
+# Breifly Snmf : Test for K ancestries and cross validate (by minimizing the loss) the genotype prediction on masked (but known) genotype.
 
 # OUTPUT
 #---------#
@@ -579,6 +572,12 @@ for (i in c(1,2,3,4)) {
 }
 
 #---- with SNPRelate ----
+# input : 
+# Methods : 
+# Briefly : the model supposed that ancestral state are hidden in the eigen value computed on the overall SNPs data. It computes the proportion of ancestries eigen value in each samples cooridnates.
+# It claims to be unbiases by LD and to be faster than model based admixture.
+# check here if you want more detail : "Eigenanalysis of SNP data with an identity by descent interpretation"
+
 RV <- snpgdsEIGMIX(genofile_cata, autosome.only = F, maf = 0.5, missing.rate = 0.2)
 RV$eigenval
 
@@ -605,4 +604,5 @@ prop <- snpgdsAdmixProp(RV, groups=groups)
 
 # draw
 snpgdsAdmixPlot(prop, group=metadata$Population)
+
 
