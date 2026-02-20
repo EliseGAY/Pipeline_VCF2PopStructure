@@ -212,11 +212,9 @@ TD=tajima.test(DNAbin)
 # [1] 0.6240548
 
 # ---- with HierFSTAT  ---- 
-# Methods (not sure about the difference with PEGAS yet) : 
-# It approximate the K by using 2pq formula. 
-# By doing that the contribution of intermediate allele to Theta increase 
+# Input : Allele ALT count with col = position and rows = samples
 
-TajimaD.dosage(loci_table_convert)
-# 2.382157
-theta.Watt.dosage(loci_table_convert,L=Nb_total_site)
-# 4.634872e-07
+TajimaD.dosage(t(loci_table_T_CV))
+# -0.5624865
+theta.Watt.dosage(t(loci_table_T_CV),L=Nb_total_site)
+# 0.004585839
