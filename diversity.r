@@ -184,15 +184,16 @@ ggplot() +
 # initiate nb of site
 Nb_seg_site = length(seg.sites(DNAbin))
 Nb_total_site = 5000000
+# compute difference by pairs :
+diff=dist.dna(DNAbin,"n")
 
-# Format the alt allele frequencies per site
-n_ind <- ncol(loci_table_convert)
-p_by_variant <- rowSums(loci_table_convert) / n_ind
-theta.obs.variant = theta.h(p_by_variant)
-# 0.7465834
-# scale for all position (produit en croix) :
-theta.obs_by_site = theta.obs.variant*(Nb_seg_site/Nb_total_site)
-# 0.01473203
+#théta pi
+theta_pi<-mean(dist.dna(DNAbin,"n"))
+# 17799.69
+
+#théta pi scaled par nombre de positions
+theta_pi_bysite=theta_pi/Nb_total_site
+# 0.003559938
 
 # Expected Theta
 thetaS= theta.s(x = length(seg.sites(DNAbin)), n = 2*31)
