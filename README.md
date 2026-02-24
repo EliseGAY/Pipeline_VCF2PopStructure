@@ -1,5 +1,7 @@
 # Population Structure Analysis with Whole Genome Sequencing Data
 
+# Coll. hugo Deshayes (Ph.D, EPHE)
+
 ## Overview
 These script provides a global analysis of population structure using VCF data. The main analyses performed include:
 
