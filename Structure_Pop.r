@@ -35,7 +35,7 @@ VCFR_data=read.vcfR("data/VCF_example.vcf.gz")
 vec_pop <- metadata$Population[match(colnames(VCFR_data@gt)[-1], metadata$GT_sample)]
 
 # Convert to genind (adegenet and Hierfstat format)
-genind_data <- vcfR2genind(VCFR_data) # [110] "1761W1_S352" missing
+genind_data <- vcfR2genind(VCFR_data) 
 
 # Convert genind → hierfstat data.frame. Encode genotypes with 0 (0/0), 1 (0/1), 2 (1/1)
 HF_Cata <- genind2hierfstat(genind_data, pop = vec_pop)
@@ -43,10 +43,10 @@ HF_Cata_dt = as.data.frame(HF_Cata)
 colnames(HF_Cata_dt)[1] = "population"
 rownames(HF_Cata_dt) <- NULL
 
-# Read the VCF with PEgas (read only 10 000 loci) :
+# Read the VCF with Pegas (read only 10 000 loci) :
 VCFPegas=read.vcf("data/VCF_example.vcf.gz")
 
-# Read the VCF with SNPRealte and convert to GDS
+# Read the VCF with SNPRelate and convert to GDS
 snpgdsVCF2GDS(
   vcf.fn = "data/VCF_example.vcf.gz",
   out.fn = "data/VCF_example.SNP.gds")
@@ -205,6 +205,7 @@ snpgdsClose(genofile_TC)
 #   p̄       : mean allele frequency
 #-----------------------------------------------------------------#
 
+## To DO
 
 #-----------------------------------------------------------------#
 # Hudson et al. (1992) — diversity-based (π)
@@ -429,7 +430,7 @@ for (i in 1:nb_axes) {
 #=====================#
 #=====================#
 # briefly : 
-# Test to fit how much your genotype structure fits to K ancestries (K proxi is given by the PCA you already made).
+# Test to fit how much your genotype structure fits to K ancestries
 # Cross entropy measures the -log(likelihood) to seeing your data given the Ki ancestry tested 
 # The lower the cross-entropy the better the K
 
@@ -604,5 +605,6 @@ prop <- snpgdsAdmixProp(RV, groups=groups)
 
 # draw
 snpgdsAdmixPlot(prop, group=metadata$Population)
+
 
 
