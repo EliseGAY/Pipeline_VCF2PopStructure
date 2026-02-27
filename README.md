@@ -14,12 +14,12 @@ These script provides a global analysis of population structure using VCF data. 
 - **Principal Component Analysis (PCA)** across all chromosomes
 - **F-statistics (FST) computation** for population differentiation
 - **sNMF analysis** for ancestry inference
-- 
+
 
 `Diversity.r : `
 
 - **Site Frequency Spectrum (SFS) computation**
-- **Diversity indices (DIV)**
+- **Diversity indices**
 
 
 ## Dependencies
@@ -47,14 +47,17 @@ library(usethis)
 library(devtools)
 library(comprehend)
 system("git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git")
-load_all("../VCF2PopStructure/")```
+load_all("../VCF2PopStructure/")
+```
 
 Ensure these packages are installed before running the script.
 
 ---
 
 ## Input Data
+
 ### 1. Population Metadata
+
 A metadata table containing sample IDs and their associated population labels is required.
 
 **Example format (metadata/Samples_table.txt):**
