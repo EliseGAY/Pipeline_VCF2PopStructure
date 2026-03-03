@@ -19,7 +19,7 @@ library(usethis)
 library(devtools)
 library(comprehend)
 system("git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git")
-load_all("../VCF2PopStructure/")
+load_all("VCF2PopStructure/")
 
 #===============================#
 #===============================#
