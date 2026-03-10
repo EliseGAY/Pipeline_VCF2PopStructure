@@ -179,7 +179,7 @@ ggplot() +
 # Reversely the singletons contribute lower to thetaPi, if there is a lot of singleton thetaPi will stay low.
 # ThetaS uses brutally the nb of difference (whatever the allele frequency in the pop) so it is not weigthed by alt freq.
 # So ThetaS >> ThetaPi TD negative means that we have an excess of singleton (which lower the ThetaPi)
-# If ThetaS << ThetaPi TD positive means that 
+# If ThetaS << ThetaPi TD positive means that we have an excess of mid-freq alt allele (which increase the ThetaPi)
 
 # initiate nb of site
 Nb_seg_site = length(seg.sites(DNAbin))
