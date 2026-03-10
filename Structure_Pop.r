@@ -147,27 +147,25 @@ fst_snp <- snpgdsFst(maf = 0.05,
                      missing.rate = 0.20 ,
                      method = "W&C84")
 
+# plot Fsp by snp
+plot(x = fst_snp$FstSNP)
+
 # select pair of pops manually to compute pairwise Fst
 # Create a sub metadata table :
-submetadata = metadata[metadata$Population %in% c("Termes", "Cucugnan"),]
-submetadata = metadata[metadata$Population %in% c("Termes", "Cesseras"),]
-submetadata = metadata[metadata$Population %in% c("Cesseras", "Cucugnan"),]
+submetadata = metadata[metadata$Population %in% c("pop1", "pop2"),]
+submetadata = metadata[metadata$Population %in% c("pop1", "pop3"),]
+submetadata = metadata[metadata$Population %in% c("pop2", "pop3"),]
 
-# get sub gds file to compute pairwise
+# get sub gds file to compute pairwise. Do it for all pairs
 snpgdsCreateGenoSet(src.fn = "data/VCF_example.SNP.gds",
-                  dest.fn = "VCF_example.SNP.Cuc-Cess.vcf.gds",
+                  dest.fn = "VCF_example.SNP.pop1-2.vcf.gds",
                   sample.id = submetadata$GT_sample,
                   verbose = TRUE)
 
 genofile_TC=snpgdsOpen("VCF_example.SNP.T-C.vcf.gds")
 read.gdsn(index.gdsn(genofile_TC, "sample.id"))
 
-genofile_TCess=snpgdsOpen("VCF_example.SNP.T-Cess.vcf.gds")
-read.gdsn(index.gdsn(genofile_TCess, "sample.id"))
-
-genofile_Cuc_Cess=snpgdsOpen("VCF_example.SNP.Cuc-Cess.vcf.gds")
-read.gdsn(index.gdsn(genofile_Cuc_Cess, "sample.id"))
-
+# run Fst on subseted dataset
 fst_snp <- snpgdsFst(maf = 0.05, 
                      gdsobj = genofile_Cuc_Cess, 
                      autosome.only = F,
@@ -177,35 +175,22 @@ fst_snp <- snpgdsFst(maf = 0.05,
 
 snpgdsClose(genofile_TC)
 
-# Cucugnan (12), Termes (9) :
+# pop1 (12), pop2 (9) :
 # SNPs: 60,571
 # $Fst
 # [1] 0.1457925
 
-# Cesseras (15), Termes (9)
+# pop3 (15), pop2 (9)
 # SNPs: 40,806
 # > fst_snp
 # $Fst
 # [1] 0.3661034
 
-# Cesseras (15), Cucugnan (12)
+# pop3 (15), pop1 (12)
 # SNPs: 57,223
 # > fst_snp
 # $Fst
 # [1] 0.2628528
-
-#-----------------------------------------------------------------#
-# adegenet F - statistics (Reynolds)
-#   
-#   Reynolds et al. (1983) — drift-based genetic distance
-#
-#   FST_Reynolds = Σ (p_i − p_j)^2 / Σ [ p̄ (1 − p̄) ]
-#
-#   p_i, p_j : allele frequencies in populations i and j
-#   p̄       : mean allele frequency
-#-----------------------------------------------------------------#
-
-## To DO
 
 #-----------------------------------------------------------------#
 # Hudson et al. (1992) — diversity-based (π)
@@ -217,7 +202,8 @@ snpgdsClose(genofile_TC)
 #-----------------------------------------------------------------#
 
 #---- with Package VCR2PopStructure (home made)----
-# (git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git) and then load(Package_VCF2PopStructure/)
+# (git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git) 
+# load.all(Package_VCF2PopStructure/)
 
 # Get genotype table
 loci_table = extract.gt(VCFR_data, element = "GT")
@@ -249,7 +235,7 @@ summary(by_popCount)
 Fst_BySnps = getFstBySNP_Count(loci_table_T = loci_table_T_CV, 
                               pop_table = metadata, Na_rate = 0, 
                               MAF_threshold = 0.05)
-Fst_BySnps$Cucugnan_Cesseras
+plot(x = Fst_BySnps$pop1_pop2)
 
 # Fst Whole SNPs
 Fst_GlobalCount = getGlobalFst_Count(loci_table_T = loci_table_T_CV, 
@@ -257,13 +243,13 @@ Fst_GlobalCount = getGlobalFst_Count(loci_table_T = loci_table_T_CV,
 
 Fst_GlobalCount
 #> Fst_GlobalCount
-#$Cucugnan_Termes
+#$pop1_pop2
 #[1] 0.2343076
 #
-#$Cucugnan_Cesseras
+#$pop1_pop3
 #[1] 0.3869806
 #
-#$Termes_Cesseras
+#$pop3_pop2
 #[1] 0.3902395
 
 # Permute the Fst to get significance :
@@ -297,24 +283,19 @@ SNP_vec = read.gdsn(index.gdsn(genofile_cata, "snp.id"))
 sub_SNP_vec = sample(SNP_vec, 10000)
 rowrandom = order(round(runif(n = 500, min = 1, max = 10000), 0))
 
-# test on whole samples
+# test on whole samples, with two methods
 LD_Mat_Comp = snpgdsLDMat(gdsobj = genofile_cata, slide = -1, method = "composite", snp.id = sub_SNP_vec)
 LD_Mat_Corr = snpgdsLDMat(gdsobj = genofile_cata, slide = -1, method = "corr", snp.id = sub_SNP_vec)
 
 # subset to plot :
 LD_Mat_Comp_sub = LD_Mat_Comp$LD[rowrandom,rowrandom]
 LD_Mat_Corr_sub = LD_Mat_Corr$LD[rowrandom,rowrandom]
+LD_Mat_Corr_sub[LD_Mat_Corr_sub < 0] = 0 # replace neg value to 0
 
 # vizualize :
-image(t(LD_Mat_Comp_sub^2))
-image(t(LD_Mat_Corr_sub^2))
+heatmap(LD_Mat_Corr_sub, Rowv = NA, Colv = NA, labRow = NA, labCol = NA)
 
-# do pruning on whole data. 
-LDcomposite_Pruning <- snpgdsLDpruning(gdsobj = genofile_cata, 
-                          method = "composite", 
-                          num.thread = 4, autosome.only  = F,
-                          missing.rate = 0.2, ld.threshold = 0.8, maf = 0.05)
-
+# do pruning on whole data, adapt your methods if you want
 LDcorr_Pruning <- snpgdsLDpruning(gdsobj = genofile_cata, 
                           method = "corr", 
                           num.thread = 4, 
@@ -325,11 +306,6 @@ LDcorr_Pruning <- snpgdsLDpruning(gdsobj = genofile_cata,
 snpgdsCreateGenoSet(src.fn = "data/VCF_example.SNP.gds",
                     dest.fn = "data/VCF_example.SNP.PrunnedCorrMAF05LD01.gds",
                     snp.id = LDcorr_Pruning$chrptg000007l,
-                    verbose = TRUE)
-
-snpgdsCreateGenoSet(src.fn = "data/VCF_example.SNP.gds",
-                    dest.fn = "data/VCF_example.SNP.PrunnedCompMAF05LD01.gds",
-                    snp.id = LDcomposite_Pruning$chrptg000007l,
                     verbose = TRUE)
 
 geno_comp_pruned = openfn.gds("data/VCF_example.SNP.PrunnedCompMAF05.gds")
@@ -605,6 +581,7 @@ prop <- snpgdsAdmixProp(RV, groups=groups)
 
 # draw
 snpgdsAdmixPlot(prop, group=metadata$Population)
+
 
 
 
