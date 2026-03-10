@@ -47,7 +47,7 @@ library(usethis)
 library(devtools)
 library(comprehend)
 system("git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git")
-load_all("../VCF2PopStructure/")
+load_all("Package_VCF2PopStructure/")
 ```
 
 Ensure these packages are installed before running the script.
