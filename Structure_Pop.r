@@ -1,3 +1,49 @@
+#!/usr/bin/env Rscript
+
+#========================================================================================#
+#========================================================================================#
+# Pop structure : 
+# - Fstatistics
+# - PCA
+# - Admixture
+# - SFS
+# - Diversity
+# - Imbreeding
+# Aim : Run general analysis of population structure on a gVCF
+#========================================================================================#
+#========================================================================================#
+
+#============================#
+#============================#
+# ------ Load libraries ----
+#============================#
+#============================#
+
+library(LEA)
+library(vcfR)
+library(hierfstat)
+library(pegas)
+library(adegenet)
+library(SNPRelate)
+library(gdsfmt)
+library(rlist)
+library(ggplot2)
+library(withr)
+library(ggplot2)
+library(ggrepel)
+library(reshape2)
+library(gridExtra)
+library(pcadapt)
+library(dplyr)
+library(stringr)
+library(usethis)
+library(devtools)
+library(comprehenr)
+library(pheatmap)
+
+# system("git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git")
+load_all("../Package_VCF2PopStructure/")
+
 #===============================#
 #===============================#
 # ------ PREPARE YOUR DATA ----
@@ -17,48 +63,46 @@
 #	pop2 sample_4
 #	pop2 sample_5
 #'''
-
 # read metada
-metadata=read.table("metadata/metadata.txt", header = TRUE)
+metadata=read.table("metadata/Samples_table.txt", header = TRUE)
 metadata=as.data.frame(metadata)
 pop=unique(metadata$Population)
 head(metadata)
 
-#-----------------------------------------------------------#
-# Generate Genotype tables needed in different R packages
-#-----------------------------------------------------------#
+# read chr length
+table_chr=read.table("metadata/sc_length.txt", header = T)
+# read chr length table
+chr_len = table_chr[which(table_chr$scaffold == "ptg000007l"),]$length
+
+# set chr name
+chr = "CHR1"
 
 # Read the VCF with vcfR :
-VCFR_data=read.vcfR("data/VCF_example.vcf.gz")
+VCFR_data=read.vcfR("data/VCF_example_subset.vcf.gz")
+
+# create a pop sorted by VCF colnames
+metadata_sorted <- metadata[match(colnames(VCFR_data@gt)[-1], metadata$sample),]
+pop_list = split(metadata_sorted$sample, metadata_sorted$Population)
 
 # create a pop vector
-vec_pop <- metadata$Population[match(colnames(VCFR_data@gt)[-1], metadata$GT_sample)]
+vec_pop <- metadata$Population[match(colnames(VCFR_data@gt)[-1], metadata$sample)]
 
 # Convert to genind (adegenet and Hierfstat format)
-genind_data <- vcfR2genind(VCFR_data) 
-
+genind_data <- vcfR2genind(VCFR_data)
 # Convert genind → hierfstat data.frame. Encode genotypes with 0 (0/0), 1 (0/1), 2 (1/1)
-HF_Cata <- genind2hierfstat(genind_data, pop = vec_pop)
+HF_Cata <- genind2hierfstat(genind_data, pop = metadata_sorted$Population)
 HF_Cata_dt = as.data.frame(HF_Cata)
+HF_Cata_dt$pop <- as.numeric(as.factor(HF_Cata_dt$pop))
 colnames(HF_Cata_dt)[1] = "population"
 rownames(HF_Cata_dt) <- NULL
 
-# Read the VCF with Pegas (read only 10 000 loci) :
-VCFPegas=read.vcf("data/VCF_example.vcf.gz")
-
 # Read the VCF with SNPRelate and convert to GDS
-snpgdsVCF2GDS(
-  vcf.fn = "data/VCF_example.vcf.gz",
-  out.fn = "data/VCF_example.SNP.gds")
+snpgdsVCF2GDS(vcf.fn = "data/VCF_example_subset.vcf.gz",
+              out.fn = "data/VCF_example_subset.gds")
 
-genofile_cata <- snpgdsOpen("data/VCF_example.SNP.gds")
+genofile_cata <- snpgdsOpen("data/VCF_example_subset.gds")
 read.gdsn(index.gdsn(genofile_cata, "sample.id"))
-
-# get your vector pop in the same order as colnames in vcf
-
-# reorder your metadata the same way : 
-metadata <- metadata %>%
-  dplyr::slice(match(read.gdsn(index.gdsn(genofile_cata, "sample.id")), metadata$GT_sample))
+read.gdsn(index.gdsn(genofile_cata, "snp.id"))
 
 #===============#
 #===============#
@@ -78,16 +122,6 @@ metadata <- metadata %>%
 #   c : p variance within individuals (heterozygosity)
 #-----------------------------------------------------------------#
 
-# ---- With Pegas ----
-
-# input : 
-#     vcf read by pegas and transformed on an object of class "loci"
-#     pop : vector of pop name (row)
-# Methods : Fst, Fit, Fis computed on each locus (default first 10K loci) 
-
-Fst_pegas = Fst(VCFPegas_data, pop = vec_pop, quiet = FALSE)
-summary(Fst_pegas)
-
 # --- Wtih Hierfstat ----
 
 # input : vcf read by vcfR and transformed on an object of class genind
@@ -99,19 +133,12 @@ Fstat_HF_Cata = basic.stats(HF_Cata, diploid = 2)
 # See what we've got :
 head(Fstat_HF_Cata$perloc)
 
-# bunch of fstat by locus ----------------------------------------------------------#
-
 # HierFstat DOCUMENTATION
 # n.ind.samp: A table --with np (number of populations) columns and nl (number of loci) rows-- of genotype counts
-#
 # pop.freq: A list containing allele frequencies. Each element of the list is one locus. For each locus, Populations are in columns and alleles in rows
-#
 # Ho: A table --with np (number of populations) columns and nl (number of loci) rows-- of observed heterozygosities
-#
 # Hs: A table --with np (number of populations) columns and nl (number of loci) rows-- of observed gene diversities
-#
 # Fis: A table --with np (number of populations) columns and nl (number of loci) rows--of observed Fis
-#
 # perloc: A table --with as many rows as loci-- containing basic statistics Ho, Hs, Ht, Dst, Ht', Dst', Fst, Fst' ,Fis, Dest
 # overall: Basic statistics averaged over loci
 #----------------------------------------------------------#
@@ -120,77 +147,51 @@ Fstat_HF_Cata$overall
 #     Ho     Hs     Ht    Dst    Htp   Dstp    Fst   Fstp    Fis   Dest 
 # 0.0730 0.0749 0.0974 0.0225 0.0999 0.0250 0.2307 0.2501 0.0258 0.0270 
 
-# Get variance component :
-vc_cata = varcomp.glob(HF_Cata_dt)
-vc_cata$a   # among populations
-vc_cata$b   # among individuals within populations
-vc_cata$c   # within individuals
-
 # pairwise Fst
 pairwisefst = pairwise.WCfst(HF_Cata)
 pairwisefst
 
-#         Cesseras  Cucugnan    Termes
-# Cesseras        NA 0.3348978 0.3442045
-# Cucugnan 0.3348978        NA 0.2151290
-# Termes   0.3442045 0.2151290        NA
+#             Pop1      Pop2      Pop3
+# Pop1        NA 0.2144688 0.3322326
+# Pop2 0.2144688        NA 0.3434954
+# Pop3 0.3322326 0.3434954        NA
 
 # --- With SNPRelate----
 
 # input : vcf read by snpgdsVCF2GDS function of SNPRelate and transformed on an object of class GDS
 #         pop : vector of pop name (row)
 
-fst_snp <- snpgdsFst(maf = 0.05, 
-                     gdsobj = genofile_cata, 
-                     autosome.only = F,
-                     population = as.factor(vec_pop), 
-                     missing.rate = 0.20 ,
-                     method = "W&C84")
-
-# plot Fsp by snp
-plot(x = fst_snp$FstSNP)
-
 # select pair of pops manually to compute pairwise Fst
 # Create a sub metadata table :
-submetadata = metadata[metadata$Population %in% c("pop1", "pop2"),]
-submetadata = metadata[metadata$Population %in% c("pop1", "pop3"),]
-submetadata = metadata[metadata$Population %in% c("pop2", "pop3"),]
+submetadata = metadata[metadata$Population %in% c("Pop1", "Pop2"),]
 
 # get sub gds file to compute pairwise. Do it for all pairs
-snpgdsCreateGenoSet(src.fn = "data/VCF_example.SNP.gds",
-                  dest.fn = "VCF_example.SNP.pop1-2.vcf.gds",
-                  sample.id = submetadata$GT_sample,
+snpgdsCreateGenoSet(src.fn = "data/VCF_example_subset.gds",
+                  dest.fn = "data/VCF_example_subset.pop1-2.vcf.gds",
+                  sample.id = submetadata$sample,
                   verbose = TRUE)
 
-genofile_TC=snpgdsOpen("VCF_example.SNP.T-C.vcf.gds")
+genofile_TC=snpgdsOpen("data/VCF_example_subset.pop1-2.vcf.gds")
 read.gdsn(index.gdsn(genofile_TC, "sample.id"))
 
 # run Fst on subseted dataset
 fst_snp <- snpgdsFst(maf = 0.05, 
-                     gdsobj = genofile_Cuc_Cess, 
+                     gdsobj = genofile_TC, 
                      autosome.only = F,
                      population = as.factor(submetadata$Population), 
                      missing.rate = 0.20 ,
-                     method = "W&C84")
+                    method = "W&C84")
 
 snpgdsClose(genofile_TC)
 
-# pop1 (12), pop2 (9) :
-# SNPs: 60,571
-# $Fst
-# [1] 0.1457925
+fst_snp$Fst
+#o.36
 
-# pop3 (15), pop2 (9)
-# SNPs: 40,806
-# > fst_snp
-# $Fst
-# [1] 0.3661034
+# Pop2 (9), Pop3 (15) :
+# of SNPs: 20,138
+# $MeanFst
+# [1] 0.2823853
 
-# pop3 (15), pop1 (12)
-# SNPs: 57,223
-# > fst_snp
-# $Fst
-# [1] 0.2628528
 
 #-----------------------------------------------------------------#
 # Hudson et al. (1992) — diversity-based (π)
@@ -202,8 +203,6 @@ snpgdsClose(genofile_TC)
 #-----------------------------------------------------------------#
 
 #---- with Package VCR2PopStructure (home made)----
-# (git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git) 
-# load.all(Package_VCF2PopStructure/)
 
 # Get genotype table
 loci_table = extract.gt(VCFR_data, element = "GT")
@@ -213,44 +212,20 @@ colnames(loci_table)
 # tranform in genotype table with Convert_GT function
 loci_table_T_CV = Convert_GT(loci_table)
 
-# Unroll the package function :
-
-#Get allele (alt and ref) frequencies over all samples :
-freq_list = getAlleleFreq(loci_table_T_CV)
-freq_list$alt_freq 
-freq_list$ref_freq
-#Get allele (alt and ref) count over all samples :
-freq_list = getAlleleCount(loci_table_T_CV)
-freq_list$alt_count
-freq_list$ref_count
-
-# Get allele freq and count by pop by giving the pop table :
-by_pop = getAlleleFreqByPop(loci_table = loci_table_T_CV, pop_table = metadata)
-summary(by_pop)
-
-by_popCount = getAlleleCountByPop(loci_table = loci_table_T_CV, pop_table = metadata)
-summary(by_popCount)
-
-#GetFst by SNP using the count 
-Fst_BySnps = getFstBySNP_Count(loci_table_T = loci_table_T_CV, 
-                              pop_table = metadata, Na_rate = 0, 
-                              MAF_threshold = 0.05)
-plot(x = Fst_BySnps$pop1_pop2)
-
 # Fst Whole SNPs
 Fst_GlobalCount = getGlobalFst_Count(loci_table_T = loci_table_T_CV, 
-                          pop_table = metadata, Na_rate = 1.0, MAF_threshold = 0.05)
+                          pop_table = metadata, Na_rate = 0.20, MAF_threshold = 0.05)
+
 
 Fst_GlobalCount
-#> Fst_GlobalCount
-#$pop1_pop2
-#[1] 0.2343076
+# $Pop2_Pop3
+# [1] 0.3588299
 #
-#$pop1_pop3
-#[1] 0.3869806
+# $Pop2_Pop1
+# [1] 0.2480494
 #
-#$pop3_pop2
-#[1] 0.3902395
+# $Pop3_Pop1
+# [1] 0.3567909
 
 # Permute the Fst to get significance :
 # TO DO
@@ -276,24 +251,6 @@ Fst_GlobalCount
 #   pruning : pruning function need a ld.threshold , the more your loose the threshold the more correlated SNPs are kept 
 
 # output : set of 'unlinked' SNPs that you want to keep for some analyses
-
-
-# prepare subset of SNPs
-SNP_vec = read.gdsn(index.gdsn(genofile_cata, "snp.id"))
-sub_SNP_vec = sample(SNP_vec, 10000)
-rowrandom = order(round(runif(n = 500, min = 1, max = 10000), 0))
-
-# test on whole samples, with two methods
-LD_Mat_Comp = snpgdsLDMat(gdsobj = genofile_cata, slide = -1, method = "composite", snp.id = sub_SNP_vec)
-LD_Mat_Corr = snpgdsLDMat(gdsobj = genofile_cata, slide = -1, method = "corr", snp.id = sub_SNP_vec)
-
-# subset to plot :
-LD_Mat_Comp_sub = LD_Mat_Comp$LD[rowrandom,rowrandom]
-LD_Mat_Corr_sub = LD_Mat_Corr$LD[rowrandom,rowrandom]
-LD_Mat_Corr_sub[LD_Mat_Corr_sub < 0] = 0 # replace neg value to 0
-
-# vizualize :
-heatmap(LD_Mat_Corr_sub, Rowv = NA, Colv = NA, labRow = NA, labCol = NA)
 
 # do pruning on whole data, adapt your methods if you want
 LDcorr_Pruning <- snpgdsLDpruning(gdsobj = genofile_cata, 
@@ -445,14 +402,14 @@ for (i in 1:nb_axes) {
 # go in the directory. The absolute path has to be short, ortherwise snmf won't work
 setwd("data/")
 # create project with nb K + nb repetition chosen
-project = snmf("VCF_116_samples_TAG.Flowqual_Noindels_Norepeat.ptg000007l.SNP.miss02.maf05SUB.ped",
+project = snmf("example.SNP.miss02.maf05.ped",
                K=1:8,
                entropy=T,
                repetitions = 20,
                project = "new")
 
 # To re-load the project already created, use:
-project = load.snmfProject("VCF_116_samples_TAG.Flowqual_Noindels_Norepeat.ptg000007l.SNP.miss02.maf05SUB.snmfProject")
+project = load.snmfProject("example.SNP.miss02.maf05.snmfProject")
 
 # project object :
 project@runs
@@ -517,7 +474,7 @@ for (i in c(1,2,3,4)) {
   ce = cross.entropy(project, K = i)
   best = which.min(ce)
   qmatrix = Q(project, K = i,run = best)
-  rownames(qmatrix)= metadata$GT_sample # carefull of the samples order in list
+  rownames(qmatrix)= metadata$sample # carefull of the samples order in list
   meltedqmatrix = melt(qmatrix)
   
   #One color for one K
@@ -549,9 +506,9 @@ for (i in c(1,2,3,4)) {
 }
 
 #---- with SNPRelate ----
-# input : 
+# input : genofile
 # Methods : 
-# Briefly : the model supposed that ancestral state are hidden in the eigen value computed on the overall SNPs data. It computes the proportion of ancestries eigen value in each samples cooridnates.
+# Briefly, the model supposed that ancestral state are hidden in the eigen value computed on the overall SNPs data. It computes the proportion of ancestries eigen value in each samples cooridnates.
 # It claims to be unbiases by LD and to be faster than model based admixture.
 # check here if you want more detail : "Eigenanalysis of SNP data with an identity by descent interpretation"
 
@@ -559,12 +516,10 @@ RV <- snpgdsEIGMIX(genofile_cata, autosome.only = F, maf = 0.5, missing.rate = 0
 RV$eigenval
 
 # make a data.frame
-tab <- data.frame(sample.id = read.gdsn(index.gdsn(genofile_cata, "sample.id")), pop = factor(metadata$Population),
+tab <- data.frame(sample.id = read.gdsn(index.gdsn(genofile_cata, "sample.id")), pop = factor(metadata_sorted$Population),
                   EV1 = RV$eigenvect[,1],    # the first eigenvector
                   EV2 = RV$eigenvect[,2],    # the second eigenvector
                   stringsAsFactors = FALSE)
-head(tab)
-
 # draw
 plot(tab$EV2, tab$EV1, col=as.integer(tab$pop),
      xlab="eigenvector 2", ylab="eigenvector 1")
@@ -572,15 +527,15 @@ legend("topleft", legend=levels(tab$pop), pch="o", col=1:4)
 
 
 # define groups
-samp.id = metadata$GT_sample
-groups <- list(Termes = samp.id[metadata$Population == "Termes"],
-               Cesseras = samp.id[metadata$Population == "Cesseras"],
-               Cucugnan = samp.id[metadata$Population == "Cucugnan"])
+samp.id = metadata_sorted$sample
+groups <- list(Pop1 = samp.id[metadata_sorted$Population == "Pop1"],
+               Pop2 = samp.id[metadata_sorted$Population == "Pop2"],
+               Pop3 = samp.id[metadata_sorted$Population == "Pop3"])
 
 prop <- snpgdsAdmixProp(RV, groups=groups)
 
 # draw
-snpgdsAdmixPlot(prop, group=metadata$Population)
+snpgdsAdmixPlot(prop, group=metadata_sorted$Population)
 
 
 
