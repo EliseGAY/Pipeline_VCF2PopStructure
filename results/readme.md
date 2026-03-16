@@ -1,0 +1,2 @@
+- PCA plots (SNPRelate)
+- Admixture plot (Snmf and SNPRelate methods)
