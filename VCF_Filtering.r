@@ -23,6 +23,10 @@ system("git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git")
 # for filters on sequencing depth 
 load_all("Package_VCF2PopStructure/")
 
+# if needed : 
+# document("Package_VCF2PopStructure/")
+# devtools::install("Package_VCF2PopStructure/")
+
 #===============================#
 #===============================#
 # Input VCF Files + Description #
