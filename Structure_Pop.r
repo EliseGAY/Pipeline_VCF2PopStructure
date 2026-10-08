@@ -13,6 +13,13 @@
 #========================================================================================#
 #========================================================================================#
 
+#===============#
+#===============#
+# Install Libraries 
+#===============#
+#===============#
+install.packages("mypacakges", "myotherpackages")
+
 #============================#
 #============================#
 # ------ Load libraries ----
@@ -41,8 +48,9 @@ library(devtools)
 library(comprehenr)
 library(pheatmap)
 
-# system("git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git")
-load_all("../Package_VCF2PopStructure/")
+# load homemade packages
+remotes::install_github("EliseGAY/Package_VCF2PopStructure")
+library(VCF2PopStructure)
 
 #===============================#
 #===============================#
