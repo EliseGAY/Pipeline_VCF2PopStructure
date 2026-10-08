@@ -3,6 +3,12 @@
 #==========================================================#
 # Filters VCF files by Depth , Missing rate or Heterozygous 
 #==========================================================#
+#===============#
+#===============#
+# Install Libraries 
+#===============#
+#===============#
+install.packages("remotes", "ggplot2", "reshape2", "gridExtra", "stringr", "vcfR", "usethis", "devtools")
 
 #===============#
 #===============#
@@ -16,16 +22,10 @@ library(stringr)
 library(vcfR)
 library(usethis)
 library(devtools)
-system("git clone https://github.com/EliseGAY/Package_VCF2PopStructure.git")
 
-# Load functions to apply filters on genotype and depth
-#------------------------------------------------------#
-# for filters on sequencing depth 
-load_all("Package_VCF2PopStructure/")
-
-# if needed : 
-# document("Package_VCF2PopStructure/")
-# devtools::install("Package_VCF2PopStructure/")
+# load homemade packages
+remotes::install_github("EliseGAY/Package_VCF2PopStructure")
+library(VCF2PopStructure)
 
 #===============================#
 #===============================#
